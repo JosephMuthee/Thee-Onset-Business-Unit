@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#14284b"><link rel="manifest" href="manifest.json"><title>THEE Onset Business Unit</title>
+<style>
+:root{--bg:#f3f6f4;--card:#fff;--tx:#10231b;--mu:#6b7c74;--g:#0b3d2e;--g2:#1fa76b;--gold:#e8b100;--red:#d64545;--bd:#e3e9e5}
+@media(prefers-color-scheme:dark){:root{--bg:#0c1511;--card:#15211b;--tx:#e8f1ec;--mu:#8da197;--bd:#233229}}
+*{box-sizing:border-box;margin:0;font-family:system-ui,sans-serif}body{background:var(--bg);color:var(--tx);padding-bottom:84px}
+header{background:linear-gradient(135deg,#14284b,#2f6fdb);color:#fff;padding:calc(env(safe-area-inset-top) + 18px) 18px 70px}
+header small{opacity:.8}header h1{font-size:30px;margin-top:4px}.wrap{padding:0 14px;margin-top:-52px}
+.card{background:var(--card);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 2px 10px #0001}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mu{color:var(--mu);font-size:12px}.in{color:var(--g2)}.out{color:var(--red)}h3{margin:6px 0 8px;font-size:15px}
+.bar{height:9px;background:var(--bd);border-radius:9px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:var(--g2)}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:none;color:var(--mu);padding:10px 0;font-size:11px}nav button.on{color:var(--g2);font-weight:700}nav b{display:block;font-size:19px}
+.fab{position:fixed;right:18px;bottom:calc(76px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;border:0;background:var(--gold);font-size:30px;box-shadow:0 4px 12px #0004}
+button.b{background:var(--g2);color:#fff;border:0;border-radius:10px;padding:8px 12px;font-weight:600}button.s{background:var(--bd);color:var(--tx)}
+input,select{width:100%;padding:11px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);margin:4px 0 8px;font-size:15px}
+.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:flex-end;z-index:5}.modal>div{background:var(--card);width:100%;border-radius:22px 22px 0 0;padding:18px;max-height:88vh;overflow:auto}
+#lock[hidden]{display:none!important}
+#lock{position:fixed;inset:0;background:linear-gradient(160deg,#14284b,#1f4f9a);color:#fff;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.dots{display:flex;gap:12px}.dots i{width:14px;height:14px;border-radius:50%;border:2px solid #fff}.dots i.f{background:var(--gold);border-color:var(--gold)}
+.pad{display:grid;grid-template-columns:repeat(3,70px);gap:12px}.pad button{height:70px;border-radius:50%;border:0;background:#ffffff22;color:#fff;font-size:24px}
+.sc{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;font-size:28px;font-weight:800;color:#fff}
+</style></head><body>
+<div id="lock"></div><div id="app" hidden></div><div id="m"></div>
+<script>
+const K='theebu_v1',$=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>'KSh '+Math.round(+n||0).toLocaleString(),day=d=>{d=d||new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)},uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+let db=JSON.parse(localStorage.getItem(K)||'null')||{tx:[],hustles:[],set:{}};
+const save=()=>localStorage.setItem(K,JSON.stringify(db));let tab='home';
+/* ---------- security ---------- */
+const sha=async s=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('tho'+s)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+const NB=()=>window.Capacitor?.Plugins?.BiometricAuth;
+async function bio(){try{if(NB()){await NB().authenticate({reason:'Unlock THEE Onset Business Unit'});return true}
+ if(!db.set.cred)return false;const id=Uint8Array.from(atob(db.set.cred),c=>c.charCodeAt(0));
+ await navigator.credentials.get({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),allowCredentials:[{id,type:'public-key'}],userVerification:'required',timeout:60000}});return true}catch(e){return false}}
+async function enableBio(){try{if(NB()){await NB().authenticate({reason:'Enable fingerprint'});db.set.bio=1}else{
+ const c=await navigator.credentials.create({publicKey:{challenge:crypto.getRandomValues(new Uint8Array(32)),rp:{name:'THEE Business Unit'},user:{id:crypto.getRandomValues(new Uint8Array(8)),name:'owner',displayName:'Owner'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',userVerification:'required'}}});
+ db.set.cred=btoa(String.fromCharCode(...new Uint8Array(c.rawId)));db.set.bio=1}save();alert('Fingerprint enabled');render()}catch(e){alert('Fingerprint not available on this device/browser')}}
+let pin='',stage=db.set.pin?'enter':'new',first='';
+function lockUI(msg){const t={new:'Create a 4-digit PIN',confirm:'Confirm your PIN',enter:'Enter your PIN'}[stage];
+ $('lock').innerHTML=`<div style="font-size:42px">📈</div><h2>THEE Onset Business Unit</h2><div>${msg||t}</div><div class="dots">${[0,1,2,3].map(i=>`<i class="${i<pin.length?'f':''}"></i>`).join('')}</div>
+ <div class="pad">${[1,2,3,4,5,6,7,8,9,'👆',0,'⌫'].map(k=>`<button onclick="key('${k}')">${k}</button>`).join('')}</div>`}
+async function key(k){if(k==='👆'){if(db.set.bio&&await bio())return open();return lockUI('Fingerprint not set up')}
+ if(k==='⌫')pin=pin.slice(0,-1);else if(pin.length<4)pin+=k;lockUI();if(pin.length<4)return;const p=pin;pin='';
+ if(stage==='new'){first=p;stage='confirm';return lockUI()}
+ if(stage==='confirm'){if(p===first){db.set.pin=await sha(p);save();return open()}stage='new';return lockUI('PINs differ, try again')}
+ if(await sha(p)===db.set.pin)open();else lockUI('Wrong PIN')}
+function open(){$('lock').hidden=true;$('app').hidden=false;render()}
+const IN=['Sales','Services','Commission','Other income'],OUT=['Stock','Rent','Transport','Wages','Marketing','Utilities','Licenses','Repairs','Other'],MAIN='Main business';
+const sum=a=>a.reduce((s,x)=>s+ +x.amt,0),num=v=>Math.abs(+v)||0,ins=a=>sum(a.filter(t=>t.type=='in')),outs=a=>sum(a.filter(t=>t.type=='out'));
+const wk=s=>{const d=new Date(s+'T00:00:00');d.setDate(d.getDate()-(d.getDay()+6)%7);return day(d)};
+const wl=k=>new Date(k+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+const money=n=>`<b class="${n>=0?'in':'out'}">${n<0?'−':''}${fmt(Math.abs(n))}</b>`;
+function weeks(n){const r=[];let d=new Date(wk(day())+'T00:00:00');for(let i=0;i<n;i++){const k=day(d),a=db.tx.filter(t=>wk(t.date)==k);r.push({k,i:ins(a),o:outs(a),p:ins(a)-outs(a)});d.setDate(d.getDate()-7)}return r}
+const hsum=n=>{const a=db.tx.filter(t=>t.hustle==n);return{n,i:ins(a),o:outs(a),p:ins(a)-outs(a)}};
+function stats(){const I=ins(db.tx),O=outs(db.tx),P=I-O,mg=I?P/I:0,w=weeks(8),pw=w.slice(0,4).filter(x=>x.p>0).length,hs=db.hustles.map(h=>hsum(h.name)),ph=hs.filter(h=>h.p>0).length;
+ return{I,O,P,mg,w,hs,score:Math.round(Math.max(0,Math.min(50,mg*250))+30*pw/4+(hs.length?20*ph/hs.length:20))}}
+const bar=(v,t,c)=>`<div class="bar"><i style="width:${Math.min(100,t>0?v/t*100:0)}%;${c?'background:'+c:''}"></i></div>`;
+const chart=w=>{const mx=Math.max(1,...w.flatMap(x=>[x.i,x.o]));return`<div style="display:flex;gap:8px">${w.map(x=>`<div style="flex:1;text-align:center"><div style="display:flex;align-items:flex-end;justify-content:center;gap:3px;height:92px"><div style="width:42%;height:${x.i/mx*90}px;background:var(--g2);border-radius:4px 4px 0 0;min-height:2px"></div><div style="width:42%;height:${x.o/mx*90}px;background:var(--red);border-radius:4px 4px 0 0;min-height:2px"></div></div><div class="mu" style="font-size:10px">${wl(x.k)}</div></div>`).join('')}</div><div class="mu" style="margin-top:4px">🟩 income &nbsp; 🟥 expenditure</div>`};
+const txRow=t=>`<div class="row" style="padding:8px 0;border-bottom:1px solid var(--bd)"><div><b>${esc(t.cat)}</b> <span class="mu">${esc(t.hustle)}</span><div class="mu">${t.date} ${esc(t.note)}</div></div><div class="${t.type}"><b>${t.type=='in'?'+':'−'}${fmt(t.amt)}</b> <button class="s b" onclick="del('tx','${t.id}')">✕</button></div></div>`;
+function view(){const s=stats(),w0=s.w[0];
+ if(tab=='home'){const col=s.score>69?'#1fa76b':s.score>44?'#e8b100':'#d64545',lab=s.score>69?'Healthy':s.score>44?'Watch closely':'At risk';
+  return`<header><small>Business dashboard</small><h1>THEE Onset Business Unit</h1></header><div class="wrap">
+  <div class="g2"><div class="card"><div class="mu">Total return</div><h2 class="in">${fmt(s.I)}</h2><div class="mu">all income</div></div><div class="card"><div class="mu">Total expenditure</div><h2 class="out">${fmt(s.O)}</h2><div class="mu">all expenses</div></div></div>
+  <div class="card row"><div><div class="mu">${s.P>=0?'NET PROFIT':'NET LOSS'}</div><h1>${money(s.P)}</h1><div class="mu">Margin: ${Math.round(s.mg*100)}%</div></div><div style="text-align:center"><div class="sc" style="background:${col}">${db.tx.length?s.score:'–'}</div><div class="mu">${db.tx.length?lab:'No data'}</div></div></div>
+  <div class="card"><h3>This week (from ${wl(w0.k)})</h3><div class="g2"><div><span class="mu">Income</span><div class="in"><b>${fmt(w0.i)}</b></div></div><div><span class="mu">Expenditure</span><div class="out"><b>${fmt(w0.o)}</b></div></div></div><div class="mu" style="margin-top:6px">Week result: ${money(w0.p)}</div></div>
+  <div class="card"><h3>Weekly income vs expenditure</h3>${chart(s.w.slice(0,6).reverse())}</div>
+  <div class="card"><h3>Side hustles</h3>${s.hs.map(h=>`<div class="row"><span>${esc(h.n)}</span>${money(h.p)}</div>`).join('')||'<div class="mu">Add your side hustles in the Hustles tab</div>'}</div>
+  <div class="card"><h3>Recent</h3>${db.tx.slice().reverse().slice(0,5).map(txRow).join('')||'<div class="mu">Tap + to record your first sale or expense</div>'}</div></div>`}
+ if(tab=='weekly'){const m=day().slice(0,7),mo=db.tx.filter(t=>t.date.startsWith(m)&&t.type=='out'),mt=sum(mo);
+  return`<div class="wrap" style="margin-top:20px"><h2>Weekly report</h2><div class="card" style="margin-top:10px">${chart(s.w.slice().reverse())}</div>${s.w.map(x=>`<div class="card"><div class="row"><b>Week of ${wl(x.k)}</b>${money(x.p)}</div><div class="mu">In ${fmt(x.i)} · Out ${fmt(x.o)}</div>${bar(x.o,x.i,x.o>x.i?'var(--red)':'')}</div>`).join('')}
+  <div class="card"><h3>Where money went (this month)</h3>${OUT.map(c=>[c,sum(mo.filter(t=>t.cat==c))]).filter(c=>c[1]).sort((a,b)=>b[1]-a[1]).map(c=>`<div class="row"><span>${c[0]}</span><span class="mu">${fmt(c[1])}</span></div>${bar(c[1],mt)}`).join('')||'<div class="mu">No expenses this month</div>'}</div></div>`}
+ if(tab=='hustles')return`<div class="wrap" style="margin-top:20px"><div class="row"><h2>Side hustles</h2><button class="b" onclick="addHustle()">+ Hustle</button></div>${[{name:MAIN},...db.hustles].map(h=>{const x=hsum(h.name);return`<div class="card" style="margin-top:10px"><div class="row"><b>${esc(h.name)}</b><span class="mu">${h.kind||'core'}</span></div><div class="mu">In ${fmt(x.i)} · Out ${fmt(x.o)}</div>${bar(x.o,x.i,x.o>x.i?'var(--red)':'')}<div class="row"><span>${x.p>=0?'Profit':'Loss'} ${money(x.p)}</span><span><button class="b" onclick="addTx('in','${esc(h.name)}')">+ In</button> <button class="b" style="background:var(--red)" onclick="addTx('out','${esc(h.name)}')">+ Out</button> ${h.id?`<button class="s b" onclick="del('hustles','${h.id}')">✕</button>`:''}</span></div></div>`}).join('')}</div>`;
+ if(tab=='records')return`<div class="wrap" style="margin-top:20px"><h2>All records</h2><div class="card" style="margin-top:10px">${db.tx.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(txRow).join('')||'<div class="mu">Nothing yet</div>'}</div></div>`;
+ return`<div class="wrap" style="margin-top:20px"><div class="card"><h3>Security</h3><button class="b" onclick="enableBio()">${db.set.bio?'Fingerprint ON ✓':'Enable fingerprint'}</button> <button class="s b" onclick="chPin()">Change PIN</button></div>
+ <div class="card"><h3>Google Sheet backend</h3><input id="url" placeholder="Apps Script Web App URL" value="${esc(db.set.url)}"><div class="row"><button class="b" onclick="sync('push')">⬆ Backup to Sheet</button><button class="b" onclick="sync('pull')">⬇ Restore</button></div><div class="mu" id="st">${db.set.last?'Last sync '+db.set.last:'Not synced yet'}</div></div>
+ <div class="card"><button class="s b" onclick="exportCsv()">Export CSV</button></div></div>`}
+function render(){$('app').innerHTML=view()+`<button class="fab" onclick="pick()">+</button><nav>${[['home','📊','Home'],['weekly','📅','Weekly'],['hustles','🚀','Hustles'],['records','🧾','Records'],['more','⚙️','More']].map(([k,i,l])=>`<button class="${tab==k?'on':''}" onclick="tab='${k}';render();scrollTo(0,0)"><b>${i}</b>${l}</button>`).join('')}</nav>`}
+function form(title,fields,ok){$('m').innerHTML=`<div class="modal"><div><h3>${title}</h3>${fields.map(f=>`<label class="mu">${f[1]}</label>${f[2]=='sel'?`<select id="f_${f[0]}">${f[3].map(o=>`<option ${o==f[4]?'selected':''}>${esc(o)}</option>`).join('')}</select>`:`<input id="f_${f[0]}" type="${f[2]}" value="${f[3]||''}">`}`).join('')}<div class="row"><button class="s b" onclick="$('m').innerHTML=''">Cancel</button><button class="b" id="ok">Save</button></div></div></div>`;
+ $('ok').onclick=()=>{const v={};fields.forEach(f=>v[f[0]]=$('f_'+f[0]).value);if(ok(v)!==false){$('m').innerHTML='';save();render()}}}
+const pick=()=>{$('m').innerHTML=`<div class="modal" onclick="if(event.target==this)this.innerHTML=''"><div><h3>Record</h3><div class="g2"><button class="b" style="padding:18px" onclick="addTx('in')">💰 Income</button><button class="b" style="padding:18px;background:var(--red)" onclick="addTx('out')">🧾 Expense</button></div></div></div>`};
+const addTx=(type,h)=>form(type=='in'?'Record income':'Record expense',[['amt','Amount (KSh)','number'],['cat','Category','sel',type=='in'?IN:OUT],['hustle','Business / hustle','sel',[MAIN,...db.hustles.map(x=>x.name)],h||MAIN],['date','Date','date',day()],['note','Note','text']],v=>{if(!num(v.amt))return false;db.tx.push({id:uid(),type,...v,amt:num(v.amt)})});
+const addHustle=()=>form('New side hustle',[['name','Name','text'],['kind','Type','sel',['Resale','Service','Farming','Digital','Transport','Food','Other']]],v=>{if(!v.name||v.name==MAIN)return false;db.hustles.push({id:uid(),name:v.name,kind:v.kind})});
+const del=(k,id)=>{if(confirm('Delete?')){db[k]=db[k].filter(x=>x.id!=id);save();render()}};
+const chPin=()=>{db.set.pin=null;save();stage='new';pin='';$('lock').hidden=false;lockUI()};
+const exportCsv=()=>{const r=['date,type,business,category,amount,note',...db.tx.map(t=>[t.date,t.type,'"'+t.hustle+'"',t.cat,t.amt,'"'+(t.note||'').replace(/"/g,'""')+'"'].join(','))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([r],{type:'text/csv'}));a.download='thee-business-unit.csv';a.click()};
+async function sync(mode){const u=$('url').value.trim();if(!u)return alert('Paste your Apps Script URL first');db.set.url=u;const st=$('st');st.textContent='Working…';
+ try{const {set,...data}=db;const r=await fetch(u,{method:'POST',body:JSON.stringify({mode,data})});const j=await r.json();
+  if(mode=='pull'){if(!j.data)throw 0;db={...j.data,set:db.set}}db.set.last=new Date().toLocaleString();save();render();alert(mode=='push'?'Backed up to Google Sheet ✓':'Restored ✓')}catch(e){st.textContent='Sync failed — check URL & deployment access ("Anyone")'}}
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js');
+lockUI();
+</script></body></html>

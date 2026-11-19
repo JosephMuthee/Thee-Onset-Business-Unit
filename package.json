@@ -1,0 +1,1 @@
+{"name":"thee-onset-business-unit","version":"1.0.0","private":true,"dependencies":{"@capacitor/android":"^6.1.2","@capacitor/core":"^6.1.2","@aparajita/capacitor-biometric-auth":"^8.0.2"},"devDependencies":{"@capacitor/cli":"^6.1.2"}}
